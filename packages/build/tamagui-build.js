@@ -9,7 +9,7 @@ const esbuild = require('esbuild')
 const fg = require('fast-glob')
 const createExternalPlugin = require('./externalNodePlugin')
 const debounce = require('lodash.debounce')
-const { dirname } = require('path')
+const { dirname, basename } = require('path')
 const alias = require('./esbuildAliasPlugin')
 
 const jsOnly = !!process.env.JS_ONLY
@@ -603,7 +603,7 @@ async function esbuildWriteIfChanged(
           const mjsOutPath = outPath.replace('.js', '.mjs')
           // if bundling no need to specify as its all internal
           // and babel is bad on huge bundled files
-          const { out: output, map: sourceMap } = shouldBundle
+          const { code: output, map: sourceMap } = shouldBundle
             ? outString
             : transform(outString, {
                 filename: mjsOutPath,
@@ -626,7 +626,7 @@ async function esbuildWriteIfChanged(
               })
 
           // output to mjs fully specified
-          await fs.writeFile(mjsOutPath, output, 'utf8')
+          await fs.writeFile(mjsOutPath, output + `\n//# sourceMappingURL=${basename(mjsOutPath)}.map\n`, 'utf8')
           await fs.writeFile(mjsOutPath + '.map', JSON.stringify(sourceMap), 'utf8')
         }
       })()
